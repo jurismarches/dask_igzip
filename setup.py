@@ -31,6 +31,7 @@ setup(
     tests_requires=[
         'pytest>=3.4.2',
         'pytest-cov>=2.5.1',
+        'flake8>=3.5.0',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
