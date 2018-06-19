@@ -30,9 +30,9 @@ On first run, indexes are saved on disk, so that subsequent runs are fast.
 .. |pypi-version| image:: https://img.shields.io/pypi/v/dask-igzip.svg
     :target: https://pypi.python.org/pypi/dask-igzip
     :alt: Latest PyPI version
-.. |travis| image:: http://img.shields.io/travis/jurismarches/dask-igzip/master.svg?style=flat
-    :target: https://travis-ci.org/jurismarches/dask-igzip
-.. |coveralls| image:: http://img.shields.io/coveralls/jurismarches/dask-igzip/master.svg?style=flat
-    :target: https://coveralls.io/r/jurismarches/dask-igzip
+.. |travis| image:: http://img.shields.io/travis/jurismarches/dask_igzip/master.svg?style=flat
+    :target: https://travis-ci.org/jurismarches/dask_igzip
+.. |coveralls| image:: http://img.shields.io/coveralls/jurismarches/dask_igzip/master.svg?style=flat
+    :target: https://coveralls.io/r/jurismarches/dask_igzip
 
 

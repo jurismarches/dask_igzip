@@ -4,6 +4,7 @@ python:
   - "3.6"
 install:
   - pip install .[tests]
+  - pip install coveralls
 script:
   - make tests
   - make quality
