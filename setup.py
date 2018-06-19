@@ -27,6 +27,7 @@ setup(
     ],
     install_requires=[
         'indexed_gzip>=0.8.5',
+        'dask>=0.17.5',
     ],
     extras_require={
         "tests": [
