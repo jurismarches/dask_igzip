@@ -13,6 +13,9 @@ from dask.delayed import delayed
 log = logging.getLogger(__name__)
 
 
+delayed = delayed(pure=True)
+
+
 class IGzipReader:
 
     def __init__(self, urlpath, chunk_size, spacing=1048576):
@@ -85,11 +88,21 @@ def read_lines(urlpath, chunk_size=None, storage_options=None):
     return False, out
 
 
-def read_text(urlpath, collection=True, chunk_size=None, storage_options=None):
+def read_text(urlpath, collection=True, chunk_size=None, storage_options=None,
+              encoding=None, errors='strict'):
     _, blocks = read_lines(
         urlpath, chunk_size=chunk_size, storage_options=storage_options)
-    blocks = list(toolz.concat(blocks))
+
+    if encoding:
+        ddecode = delayed(decode)
+        blocks = [ddecode(block, encoding, errors) for block in toolz.concat(blocks)]
+    else:
+        blocks = list(toolz.concat(blocks))
     if not collection:
         return blocks
     else:
         return dask.bag.core.from_delayed(blocks)
+
+
+def decode(lines, encoding, errors):
+    return [line.decode(encoding, errors) for line in lines]

@@ -27,6 +27,11 @@ def test_read_text_multiple(sample_data_3, dask_client):  # noqa
     assert bag.compute(scheduler='threads') == data * 3
 
 
+def test_read_text_simple_decode(sample_data_3, dask_client):  # noqa
+    bag = dask_igzip.read_text(str(sample_data_3), chunk_size=3, encoding="utf8")
+    assert bag.compute(scheduler='threads') == list(gzip.open(str(sample_data_3), "rt"))
+
+
 def test_read_text_with_ops(sample_data_3, dask_client):  # noqa
 
     def decode(x):
