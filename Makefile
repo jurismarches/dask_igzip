@@ -2,7 +2,7 @@ tests:
 	pytest --cov=dask_igzip --cov-config .coveragerc
 
 quality:
-	flake8 --max-line-length=100 **/*.py
+	flake8 --max-line-length=100 *.py **/*.py
 
 distribute:
 	[ -z $(ls dist/)  ] || rm dist/*

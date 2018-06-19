@@ -3,6 +3,7 @@ from setuptools import setup
 
 
 # inject version
+__version__ = None
 with open("dask_igzip/__version__.py") as f:
     exec(f.read())
 
@@ -40,6 +41,5 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
-        '
     ],
 )
