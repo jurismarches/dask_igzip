@@ -1,0 +1,6 @@
+[run]
+branch = True
+
+[report]
+omit = dask_igzip/__version__.py
+show_missing = true
