@@ -28,11 +28,13 @@ setup(
     install_requires=[
         'indexed_gzip>=0.8.5',
     ],
-    tests_requires=[
-        'pytest>=3.4.2',
-        'pytest-cov>=2.5.1',
-        'flake8>=3.5.0',
-    ],
+    extras_require={
+        "tests": [
+            'pytest>=3.4.2',
+            'pytest-cov>=2.5.1',
+            'flake8>=3.5.0',
+        ],
+    },
     classifiers=[
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
