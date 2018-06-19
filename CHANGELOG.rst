@@ -7,7 +7,11 @@ and this project tries to adhere to `Semantic Versioning`_.
 .. _`Keep a Changelog`: http://keepachangelog.com/en/1.0.0/
 .. _`Semantic Versioning`: http://semver.org/spec/v2.0.0.html
 
-Unreleased
-==========
+0.1.0 - 2018-06-19
+==================
+
+New
+---
 
 - initial release
+- 100% code coverage

@@ -40,7 +40,7 @@ setup(
     classifiers=[
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
-        'Topic :: Information Analysis',
+        'Topic :: Scientific/Engineering :: Information Analysis',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'Programming Language :: Python',
