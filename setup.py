@@ -27,13 +27,14 @@ setup(
     ],
     install_requires=[
         'indexed_gzip>=0.8.5',
-        'dask>=0.17.5',
+        'dask[bag]>=0.17.5',
     ],
     extras_require={
         "tests": [
             'pytest>=3.4.2',
             'pytest-cov>=2.5.1',
             'flake8>=3.5.0',
+            'distributed>=1.22',
         ],
     },
     classifiers=[
