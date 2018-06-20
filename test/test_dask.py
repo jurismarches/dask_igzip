@@ -77,3 +77,33 @@ def test_empty():
 def test_non_existing():
     with pytest.raises(FileNotFoundError):
         dask_igzip.read_text("unexistant_data.gz", chunk_size=3)
+
+
+def test_read_text_limit(sample_data_3, dask_client):  # noqa
+    # in middle of a chunk
+    result = dask_igzip.read_text(str(sample_data_3), chunk_size=3, limit=5)
+    assert len(result.compute()) == 5
+    # on first chunk
+    result = dask_igzip.read_text(str(sample_data_3), chunk_size=3, limit=2)
+    assert len(result.compute()) == 2
+    # more than lines
+    result = dask_igzip.read_text(str(sample_data_3), chunk_size=3, limit=20)
+    assert len(result.compute()) == 10  # actual len
+    # zero
+    result = dask_igzip.read_text(str(sample_data_3), chunk_size=3, limit=0)
+    assert len(result.compute()) == 0
+
+
+def test_read_text_limit_multiple(sample_data_3, dask_client):  # noqa
+    # first chunk
+    result = dask_igzip.read_text([str(sample_data_3)] * 3, chunk_size=3, limit=3)
+    assert len(result.compute()) == 3
+    # middle of second file
+    result = dask_igzip.read_text([str(sample_data_3)] * 3, chunk_size=3, limit=15)
+    assert len(result.compute()) == 15
+    # more than lines
+    result = dask_igzip.read_text([str(sample_data_3)] * 3, chunk_size=3, limit=200)
+    assert len(result.compute()) == 30  # actual len
+    # same limit as one file
+    result = dask_igzip.read_text(str(sample_data_3), chunk_size=3, limit=10)
+    assert len(result.compute()) == 10

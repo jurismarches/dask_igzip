@@ -41,3 +41,22 @@ def test_read_chunk(sample_data_3):
         b"line 8\n",
         b"line 9\n",
     ]
+
+
+def test_igzip_lines_info_in_order(sample_data_3):
+    """even if we access only lines_count and then lines_index, it works
+    """
+    reader = text.IGzipReader(str(sample_data_3), chunk_size=3)
+    # just accessing withotu raising is enough
+    reader.lines_count
+    reader.lines_index
+
+
+def test_igzip_lines_info_not_indexed(tmp_sample):
+    reader = text.IGzipReader(str(tmp_sample), chunk_size=3)
+    with pytest.raises(RuntimeError):
+        reader.chunks_count
+    with pytest.raises(RuntimeError):
+        reader.lines_count
+    with pytest.raises(RuntimeError):
+        reader.lines_index

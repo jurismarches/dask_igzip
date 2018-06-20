@@ -16,7 +16,51 @@ log = logging.getLogger(__name__)
 delayed = delayed(pure=True)
 
 
-class IGzipReader:
+class InfosManager:
+    # making it a separate class for clarity
+
+    @property
+    def lines_index_path(self):
+        return "%s.lines-index-%d" % (self.urlpath, self.chunk_size)
+
+    _lines_infos = None
+
+    def set_lines_info(self, count, line_index):
+        with open(self.lines_index_path, "w") as f:
+            # put data in a coherent order to avoid loading too much data if not needed
+            f.write(json.dumps({"count": count, "chunks": len(line_index)}) + "\n")
+            f.write(json.dumps({'index': line_index}) + "\n")
+
+    def get_lines_info(self, name):
+        # load index only if needed
+        if self._lines_infos is not None:
+            try:
+                return self._lines_infos[name]
+            except KeyError:
+                pass
+        self._lines_infos = {}
+        try:
+            with open(self.lines_index_path) as f:
+                while name not in self._lines_infos:
+                    self._lines_infos.update(json.loads(next(f)))
+        except FileNotFoundError:
+            raise RuntimeError("Use ensure_indexes before using %r" % self)
+        return self._lines_infos[name]
+
+    @property
+    def lines_index(self):
+        return self.get_lines_info("index")
+
+    @property
+    def lines_count(self):
+        return self.get_lines_info("count")
+
+    @property
+    def chunks_count(self):
+        return self.get_lines_info("chunks")
+
+
+class IGzipReader(InfosManager):
 
     def __init__(self, urlpath, chunk_size, spacing=1048576):
         self.urlpath = urlpath
@@ -26,10 +70,6 @@ class IGzipReader:
     @property
     def igzip_index_path(self):
         return "%s.gzidx" % (os.path.splitext(self.urlpath)[0],)
-
-    @property
-    def lines_index_path(self):
-        return "%s.lines-index-%d" % (self.urlpath, self.chunk_size)
 
     def ensure_indexes(self):
         if not os.path.exists(self.igzip_index_path):
@@ -45,53 +85,68 @@ class IGzipReader:
                 for i, l in enumerate(fobj):
                     if (i + 1) % self.chunk_size == 0:  # +1, for we already read the line
                         line_index.append(fobj.tell())
-            with open(self.lines_index_path, "w") as f:
-                json.dump(line_index, f)
+                count = i + 1
+            self.set_lines_info(count, line_index)
 
-    def count_chunks(self):
-        return len(json.load(open(self.lines_index_path)))
-
-    def __call__(self, chunk):
+    def __call__(self, chunk, limit=None):
         # read chunk
-        line_index = json.load(open(self.lines_index_path))
+        line_index = self.lines_index
         start = line_index[chunk]
+        limit = self.chunk_size if limit is None or limit > self.chunk_size else limit
         data = []
         with igzip.IndexedGzipFile(self.urlpath, index_file=self.igzip_index_path) as fobj:
             fobj.seek(start)
-            for i, text in zip(range(self.chunk_size), fobj):
+            for i, text in zip(range(limit), fobj):
                 data.append(text)
         return data
 
 
-def _read_chunk(urlpath, chunk_size, chunk):
-    return IGzipReader(urlpath=urlpath, chunk_size=chunk_size)(chunk)
+def _read_chunk(urlpath, chunk_size, chunk, limit=None):
+    return IGzipReader(urlpath=urlpath, chunk_size=chunk_size)(chunk, limit)
 
 
-def read_lines(urlpath, chunk_size=None, storage_options=None):
+def read_lines(urlpath, chunk_size=None, storage_options=None, limit=None):
     spacing = storage_options.get("index_spacing", 1048576) if storage_options else 1048576
     fs, fs_token, paths = dask.bytes.core.get_fs_token_paths(
         urlpath, mode='rb', storage_options=storage_options)
     all_chunks = []
+    lines_count = 0
     for path in paths:
         reader = IGzipReader(urlpath=path, chunk_size=chunk_size, spacing=spacing)
         reader.ensure_indexes()
-        all_chunks.append(list(range(reader.count_chunks())))
+        file_count = reader.lines_count
+        if limit is not None and file_count + lines_count > limit:
+            # above limit, remove some chunks and set a limit to the last one
+            file_limit = limit - lines_count
+            num_chunks = file_limit // chunk_size
+            remainder = file_limit % chunk_size
+        else:
+            num_chunks = reader.chunks_count
+            remainder = 0
+        chunks = [(i, None) for i in range(num_chunks)]
+        if remainder:
+            chunks.append((num_chunks + 1, remainder))
+        if chunks:
+            all_chunks.append(chunks)
+        lines_count += file_count
+        if limit is not None and (remainder or lines_count >= limit):
+            break  # no more lines needed, quick exit
     delayed_read = delayed(_read_chunk)
     out = []
     for path, chunks in zip(paths, all_chunks):
         token = dask.base.tokenize(fs_token, path, fs.ukey(path), "igzip", chunks)
-        keys = ['read-block-%s-%s' % (chunk, token) for chunk in chunks]
+        keys = ['read-block-%s-%s' % (chunk[0], token) for chunk in chunks]
         out.append([
-            delayed_read(path, chunk_size, chunk, dask_key_name=key)
-            for chunk, key in zip(chunks, keys)
+            delayed_read(path, chunk_size, chunk, limit, dask_key_name=key)
+            for (chunk, limit), key in zip(chunks, keys)
         ])
     return False, out
 
 
 def read_text(urlpath, collection=True, chunk_size=None, storage_options=None,
-              encoding=None, errors='strict'):
+              encoding=None, errors='strict', limit=None):
     _, blocks = read_lines(
-        urlpath, chunk_size=chunk_size, storage_options=storage_options)
+        urlpath, chunk_size=chunk_size, storage_options=storage_options, limit=limit)
 
     if encoding:
         ddecode = delayed(decode)
