@@ -11,7 +11,7 @@ This is useful when your data resides in a big gzipped file,
 yet you want to leverage dask parallelism capabilities.
 
 Sample session
----------------
+==============
 
 ::
 
@@ -37,7 +37,7 @@ Sample session
   'LINE 9'
 
 Why ?
------
+=====
 
 Dask `read_text` creates a unique partition if you provide it with a gzip file.
 This limitations comes from the fact that

@@ -21,7 +21,7 @@ setup(
     long_description=long_description,
     author='Jurismarches',
     author_email='contact@jurismarches.com',
-    url='https://github.com/jurismarches/dask-igzip',
+    url='https://github.com/jurismarches/dask_igzip',
     packages=[
         'dask_igzip',
     ],
