@@ -177,7 +177,7 @@ def read_lines(urlpath, chunk_size=None, storage_options=None, limit=None):
             remainder = 0
         chunks = [(i, None) for i in range(num_chunks)]
         if remainder:
-            chunks.append((num_chunks + 1, remainder))
+            chunks.append((num_chunks, remainder))
         if chunks:
             all_chunks.append(chunks)
         lines_count += file_count

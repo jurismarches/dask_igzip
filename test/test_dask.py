@@ -2,12 +2,21 @@
 """
 import gzip
 
+import py
 import pytest
 from dask.distributed import Client
 
 import dask_igzip
+from dask_igzip import text
 
 from .test_base import sample_data_3  # noqa
+
+
+@pytest.fixture()
+def sample_data_one_chunk():
+    sample = py.path.local(__file__).dirpath("data", "sample.txt.gz")
+    text.IGzipReader(str(sample), chunk_size=15).ensure_indexes()
+    return sample
 
 
 @pytest.fixture(scope="session")
@@ -81,29 +90,45 @@ def test_non_existing():
 
 def test_read_text_limit(sample_data_3, dask_client):  # noqa
     # in middle of a chunk
-    result = dask_igzip.read_text(str(sample_data_3), chunk_size=3, limit=5)
-    assert len(result.compute()) == 5
+    result = dask_igzip.read_text(str(sample_data_3), chunk_size=3, limit=5).compute()
+    assert len(result) == 5
+    assert result[-1] == b"a fifth sentence\n"
     # on first chunk
-    result = dask_igzip.read_text(str(sample_data_3), chunk_size=3, limit=2)
-    assert len(result.compute()) == 2
+    result = dask_igzip.read_text(str(sample_data_3), chunk_size=3, limit=2).compute()
+    assert len(result) == 2
+    assert result[-1] == b"a second sentence\n"
     # more than lines
-    result = dask_igzip.read_text(str(sample_data_3), chunk_size=3, limit=20)
-    assert len(result.compute()) == 10  # actual len
+    result = dask_igzip.read_text(str(sample_data_3), chunk_size=3, limit=20).compute()
+    assert len(result) == 10  # actual len
+    assert result[-1] == b"the last line\n"
     # zero
-    result = dask_igzip.read_text(str(sample_data_3), chunk_size=3, limit=0)
-    assert len(result.compute()) == 0
+    result = dask_igzip.read_text(str(sample_data_3), chunk_size=3, limit=0).compute()
+    assert len(result) == 0
+
+
+def test_read_text_limit_one_chunk(sample_data_one_chunk, dask_client):  # noqa
+    result = dask_igzip.read_text(str(sample_data_one_chunk), chunk_size=15, limit=5).compute()
+    assert len(result) == 5
+    assert result[-1] == b"a fifth sentence\n"
+    result = dask_igzip.read_text(str(sample_data_one_chunk), chunk_size=15, limit=20).compute()
+    assert len(result) == 10
+    assert result[-1] == b"the last line\n"
 
 
 def test_read_text_limit_multiple(sample_data_3, dask_client):  # noqa
     # first chunk
-    result = dask_igzip.read_text([str(sample_data_3)] * 3, chunk_size=3, limit=3)
-    assert len(result.compute()) == 3
+    result = dask_igzip.read_text([str(sample_data_3)] * 3, chunk_size=3, limit=3).compute()
+    assert len(result) == 3
+    assert result[-1] == b"a third sentence\n"
     # middle of second file
-    result = dask_igzip.read_text([str(sample_data_3)] * 3, chunk_size=3, limit=15)
-    assert len(result.compute()) == 15
+    result = dask_igzip.read_text([str(sample_data_3)] * 3, chunk_size=3, limit=15).compute()
+    assert len(result) == 15
+    assert result[-1] == b"a fifth sentence\n"
     # more than lines
-    result = dask_igzip.read_text([str(sample_data_3)] * 3, chunk_size=3, limit=200)
-    assert len(result.compute()) == 30  # actual len
+    result = dask_igzip.read_text([str(sample_data_3)] * 3, chunk_size=3, limit=200).compute()
+    assert len(result) == 30  # actual len
+    assert result[-1] == b"the last line\n"
     # same limit as one file
-    result = dask_igzip.read_text(str(sample_data_3), chunk_size=3, limit=10)
-    assert len(result.compute()) == 10
+    result = dask_igzip.read_text(str(sample_data_3), chunk_size=3, limit=10).compute()
+    assert len(result) == 10
+    assert result[-1] == b"the last line\n"

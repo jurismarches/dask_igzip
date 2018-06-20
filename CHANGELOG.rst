@@ -7,6 +7,20 @@ and this project tries to adhere to `Semantic Versioning`_.
 .. _`Keep a Changelog`: http://keepachangelog.com/en/1.0.0/
 .. _`Semantic Versioning`: http://semver.org/spec/v2.0.0.html
 
+
+UNRELEASED
+==========
+
+New
+---
+
+- read_text now accept a limit parameter to limit the global amount of lines to read
+
+Changed
+-------
+
+- incompatible format for lines index
+
 0.1.0 - 2018-06-19
 ==================
 
