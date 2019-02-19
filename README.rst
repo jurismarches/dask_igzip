@@ -48,7 +48,7 @@ then lines positions are also indexed,
 so that reading the text can be done by chunk (thus enabling parallelism).
 On first run, indexes are saved on disk, so that subsequent runs are fast.
 
-.. _`indexed_gzip`: https://githuib.com/pauldmccarthy/indexed_gzip
+.. _`indexed_gzip`: https://github.com/pauldmccarthy/indexed_gzip
 .. _`dask read_text`: https://dask.pydata.org/en/latest/bag-creation.html#db-read-text
 
 
